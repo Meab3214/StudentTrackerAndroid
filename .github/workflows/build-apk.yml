@@ -2,7 +2,7 @@ name: Build Student Tracker APK
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, feature/pro-v4]
 permissions:
   contents: read
 jobs:
@@ -27,13 +27,19 @@ jobs:
           gradle-version: '8.9'
       - name: Build debug APK
         run: gradle --no-daemon --stacktrace :app:assembleDebug
-      - name: Verify APK
+      - name: Build release APK
+        run: gradle --no-daemon --stacktrace :app:assembleRelease
+      - name: Verify APKs
         run: |
           test -s app/build/outputs/apk/debug/app-debug.apk
+          test -s app/build/outputs/apk/release/app-release-unsigned.apk
           ls -lh app/build/outputs/apk/debug/app-debug.apk
-      - name: Upload APK
+          ls -lh app/build/outputs/apk/release/app-release-unsigned.apk
+      - name: Upload APKs
         uses: actions/upload-artifact@v4
         with:
-          name: StudentTracker-v3-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: StudentTracker-v4-apks
+          path: |
+            app/build/outputs/apk/debug/app-debug.apk
+            app/build/outputs/apk/release/app-release-unsigned.apk
           if-no-files-found: error
