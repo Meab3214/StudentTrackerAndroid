@@ -18,6 +18,9 @@ android {
             versionNameSuffix '-debug'
         }
         release {
+            // Temporary test signing so the Release APK can be installed.
+            // A private production keystore will replace this before publishing.
+            signingConfig signingConfigs.debug
             minifyEnabled false
             shrinkResources false
         }
