@@ -5,13 +5,22 @@ import android.content.*;import android.database.*;import android.database.sqlit
 public class StudentDb extends SQLiteOpenHelper{
  public static final String[] CLASSES={"1م أ","1م ب","2م أ","2م ب","3م أ","3م ب"};
  public static final int WEEKS=19;
- public StudentDb(Context c){super(c,"student_tracker.db",null,1);}
+ private static final int DB_VERSION=2;
+ public StudentDb(Context c){super(c,"student_tracker.db",null,DB_VERSION);}
  public void onCreate(SQLiteDatabase d){
   d.execSQL("CREATE TABLE students(id INTEGER PRIMARY KEY AUTOINCREMENT,student_no INTEGER,name TEXT NOT NULL,class_name TEXT NOT NULL,UNIQUE(class_name,student_no))");
   d.execSQL("CREATE TABLE attendance(student_id INTEGER,week INTEGER,session INTEGER,status TEXT,UNIQUE(student_id,week,session))");
   d.execSQL("CREATE TABLE grades(student_id INTEGER,period INTEGER,participation REAL DEFAULT 0,activities REAL DEFAULT 0,homework REAL DEFAULT 0,project REAL DEFAULT 0,short_tests REAL DEFAULT 0,practical REAL DEFAULT 0,UNIQUE(student_id,period))");
+  createIndexes(d);
  }
- public void onUpgrade(SQLiteDatabase d,int a,int b){}
+ private void createIndexes(SQLiteDatabase d){
+  d.execSQL("CREATE INDEX IF NOT EXISTS idx_students_class_no ON students(class_name,student_no)");
+  d.execSQL("CREATE INDEX IF NOT EXISTS idx_attendance_student_week ON attendance(student_id,week,session)");
+  d.execSQL("CREATE INDEX IF NOT EXISTS idx_grades_student_period ON grades(student_id,period)");
+ }
+ public void onUpgrade(SQLiteDatabase d,int oldVersion,int newVersion){
+  if(oldVersion<2)createIndexes(d);
+ }
  public Cursor students(String c){return getReadableDatabase().rawQuery("SELECT id,student_no,name FROM students WHERE class_name=? ORDER BY student_no",new String[]{c});}
  public int count(String c){Cursor x=getReadableDatabase().rawQuery("SELECT count(*) FROM students WHERE class_name=?",new String[]{c});x.moveToFirst();int n=x.getInt(0);x.close();return n;}
  public long add(int no,String name,String c){ContentValues v=new ContentValues();v.put("student_no",no);v.put("name",name.trim());v.put("class_name",c);return getWritableDatabase().insert("students",null,v);}
