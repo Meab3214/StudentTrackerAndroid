@@ -1,46 +1,61 @@
 name: Build Student Tracker APK
+
 on:
   workflow_dispatch:
   push:
     branches: [main, feature/pro-v4]
+
 permissions:
   contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Setup Java 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
           cache: gradle
+
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+
       - name: Install Android SDK packages
         run: sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
+
       - name: Build debug APK
         run: gradle --no-daemon --stacktrace :app:assembleDebug
+
       - name: Build installable release APK
         run: gradle --no-daemon --stacktrace :app:assembleRelease
-      - name: Verify APKs
+
+      - name: Verify APK files and signatures
         run: |
-          test -s app/build/outputs/apk/debug/app-debug.apk
-          test -s app/build/outputs/apk/release/app-release.apk
-          echo "Debug APK:"
-          ls -lh app/build/outputs/apk/debug/app-debug.apk
-          echo "Installable Release APK:"
-          ls -lh app/build/outputs/apk/release/app-release.apk
-      - name: Upload APKs
+          set -e
+          DEBUG_APK=app/build/outputs/apk/debug/app-debug.apk
+          RELEASE_APK=app/build/outputs/apk/release/app-release.apk
+          test -s "$DEBUG_APK"
+          test -s "$RELEASE_APK"
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose "$DEBUG_APK"
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose "$RELEASE_APK"
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$RELEASE_APK" | head -n 5
+          sha256sum "$DEBUG_APK" "$RELEASE_APK"
+          ls -lh "$DEBUG_APK" "$RELEASE_APK"
+
+      - name: Upload installable APKs
         uses: actions/upload-artifact@v4
         with:
-          name: StudentTracker-v4-apks
+          name: StudentTracker-v4-installable-apks
           path: |
             app/build/outputs/apk/debug/app-debug.apk
             app/build/outputs/apk/release/app-release.apk
