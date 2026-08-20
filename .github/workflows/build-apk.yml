@@ -3,26 +3,37 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+permissions:
+  contents: read
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Java 21
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
-      - uses: android-actions/setup-android@v3
-      - name: Install Android SDK
+          cache: gradle
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Install Android SDK packages
         run: sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
-      - uses: gradle/actions/setup-gradle@v4
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
-      - name: Build APK
-        run: gradle --no-daemon :app:assembleDebug
+      - name: Build debug APK
+        run: gradle --no-daemon --stacktrace :app:assembleDebug
       - name: Verify APK
-        run: ls -lh app/build/outputs/apk/debug/app-debug.apk
-      - uses: actions/upload-artifact@v4
+        run: |
+          test -s app/build/outputs/apk/debug/app-debug.apk
+          ls -lh app/build/outputs/apk/debug/app-debug.apk
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
-          name: StudentTracker-debug-apk
+          name: StudentTracker-v3-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
