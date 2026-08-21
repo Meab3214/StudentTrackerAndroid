@@ -1,3 +1,10 @@
-# StudentTrackerAndroid
+# StudentTrackerAndroid / سجلي الذكي
 
 مشروع نظام متابعة الطلاب والحضور والدرجات.
+
+## سياسة الخصوصية
+سياسة الخصوصية العامة لتطبيق **سجلي الذكي** متاحة في الملف:
+
+[privacy-policy.html](./privacy-policy.html)
+
+التطبيق الحالي مصمم للعمل محليًا دون صلاحية إنترنت، ولا يحتوي على إعلانات أو Analytics أو Tracking.
